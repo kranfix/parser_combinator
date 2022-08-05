@@ -1,0 +1,8 @@
+{
+  "name": "parser_combinator_ts",
+  "version": "0.0.3",
+  "module": "src/index.js",
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}
