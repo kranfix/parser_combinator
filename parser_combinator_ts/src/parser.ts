@@ -10,7 +10,7 @@ interface Call {
 
 export function parse(text: string): Result<Expr> {
   const ctx = new Context(text);
-  return any<Expr>([booleanLiteral])(ctx);
+  return any<Expr>([booleanLiteral, numberLiteral])(ctx);
 }
 
 export function booleanLiteral(ctx: Context): Result<boolean> {
@@ -24,4 +24,11 @@ export function booleanLiteral(ctx: Context): Result<boolean> {
       (_) => false
     ),
   ])(ctx);
+}
+
+export function numberLiteral(ctx: Context): Result<number> {
+  return map(
+    (ctx) => ctx.parse_regex(/[+\-]?[0-9]+(\.[0-9]*)?/g, "number"),
+    parseFloat
+  )(ctx);
 }
