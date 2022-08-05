@@ -1,14 +1,24 @@
 import { any, map } from "./combinator";
-import { Context, Result } from "./foundation";
+import { Context, Failure, Result } from "./foundation";
 
-type Expr = boolean | number | Call;
+// Expresion
+type Expr = boolean | number | Call | null;
 
 interface Call {
   readonly target: string;
   readonly args: Expr[];
 }
 
-export function parse(text: string): Result<Expr> {
+export function parse(text: string): Expr {
+  const _ctx = new Context(text);
+  const res = any<Expr>([booleanLiteral, numberLiteral])(_ctx);
+  if (res.success) return res.value;
+  const { expected, ctx } = res as Failure;
+  throw `Parse error, expected ${expected} at char ${ctx.index}`;
+}
+
+// Expresion parser
+export function expr(text: string): Result<Expr> {
   const ctx = new Context(text);
   return any<Expr>([booleanLiteral, numberLiteral])(ctx);
 }
