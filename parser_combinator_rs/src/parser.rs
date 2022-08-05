@@ -34,13 +34,13 @@ pub fn parse(code: String) -> std::result::Result<Expr, String> {
 fn expr<'a>(ctx: &'a Ctx) -> Result<Expr> {
   // [call, numberLiteral]
   let parsers: Vec<ParserFn<Expr>> = vec![
-    // bool_literal
+    // bool literal
     Box::new(|ctx| {
       let target = bool_literal(ctx)?;
       let val = target.val();
       Ok(target.ctx().success(Expr::Bool(val)))
     }),
-    // number_literal
+    // number literal
     Box::new(|ctx| {
       let target = number_literal(ctx)?;
       let val = target.val();
@@ -105,9 +105,8 @@ fn args<'a>(ctx: &'a Ctx) -> Result<Vec<Expr>> {
   let sucess = others(first.ctx())?;
   let others = sucess.val();
 
-  for other in others {
-    exprs.push(other);
-  }
+  exprs.extend_from_slice(&others);
+
   Ok(sucess.ctx().success(exprs))
 }
 

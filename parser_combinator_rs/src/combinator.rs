@@ -4,7 +4,7 @@ pub type ParserFn<T> = Box<dyn for<'a> Fn(&'a Ctx) -> Result<T>>;
 
 pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<T> {
   fn _parser<T>(ctx: &Ctx, parsers: &Vec<ParserFn<T>>) -> Result<T> {
-    let mut err = ctx.failure("There was no match".to_string());
+    let mut err = ctx.failure("any".to_string());
 
     for parser in parsers {
       let res = parser(&ctx);
@@ -22,24 +22,21 @@ pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<T
   move |ctx| _parser(ctx, &parsers)
 }
 
-// fn optional<T: Clone>(
-//   parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
-// ) -> impl for<'a> Fn(&'a Ctx) -> Result<Option<T>> {
-//   move |ctx| {
-//     let ok = match parser(ctx) {
-//       Ok(success) => {
-//         let ctx = success.ctx();
-//         let val = Some(success.val());
-//         ctx.success(val)
-//       }
-//       Err(failure) => {
-//         let ctx = failure.ctx();
-//         ctx.success(None)
-//       }
-//     };
-//     Ok(ok)
-//   }
-// }
+//pub fn optional<T: Clone>(
+//  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
+//) -> impl for<'a> Fn(&'a Ctx) -> Result<Option<T>> {
+//  move |ctx| {
+//    let ok = match parser(ctx) {
+//      Ok(success) => {
+//        let ctx = success.ctx();
+//        let val = Some(success.val());
+//        ctx.success(val)
+//      }
+//      Err(_) => ctx.success(None),
+//    };
+//    Ok(ok)
+//  }
+//}
 
 // pub fn sequence<T: Clone>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
 //   fn _parser<T: Clone>(ctx: &Ctx, parsers: &Vec<ParserFn<T>>) -> Result<Vec<T>> {
