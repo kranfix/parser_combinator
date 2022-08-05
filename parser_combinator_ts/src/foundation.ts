@@ -4,9 +4,9 @@ export class Context {
   text: string;
   index: number;
 
-  constructor(text, index) {
+  constructor(text: string, index?: number) {
     this.text = text;
-    this.index = index;
+    this.index = index ?? 0;
   }
 
   skip(n: number): Context {

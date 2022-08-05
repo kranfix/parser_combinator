@@ -4,5 +4,8 @@
   "module": "src/index.js",
   "devDependencies": {
     "bun-types": "latest"
+  },
+  "scripts": {
+    "example": "bun run example/example.ts"
   }
 }
