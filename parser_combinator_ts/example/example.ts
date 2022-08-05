@@ -1,14 +1,10 @@
 import { parse } from "../src";
 
 function example(text: string) {
-  const res = parse(text);
-  if (res.success) {
-    console.log(res.value);
-  } else {
-    console.log(res.expected);
-  }
+  console.log(parse(text));
 }
 
+example("null");
 example("true");
 example("false");
 example("1");

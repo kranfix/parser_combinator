@@ -11,16 +11,21 @@ interface Call {
 
 export function parse(text: string): Expr {
   const _ctx = new Context(text);
-  const res = any<Expr>([booleanLiteral, numberLiteral])(_ctx);
+  const res = expr(_ctx);
   if (res.success) return res.value;
   const { expected, ctx } = res as Failure;
   throw `Parse error, expected ${expected} at char ${ctx.index}`;
 }
 
 // Expresion parser
-export function expr(text: string): Result<Expr> {
-  const ctx = new Context(text);
-  return any<Expr>([booleanLiteral, numberLiteral])(ctx);
+export function expr(ctx: Context): Result<Expr> {
+  return any<Expr>([nullLiteral, booleanLiteral, numberLiteral])(ctx);
+}
+
+function nullLiteral(ctx: Context): Result<null> {
+  let res = ctx.parse_str("null");
+  if (res.success) return res.ctx.success(null);
+  return ctx.failure("null");
 }
 
 export function booleanLiteral(ctx: Context): Result<boolean> {
