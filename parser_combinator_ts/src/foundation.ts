@@ -12,7 +12,7 @@ export class Context {
   skip(n: number): Context {
     let newIdx = this.index + n;
     if (newIdx > this.text.length) newIdx = this.text.length;
-    return { ...this, index: newIdx };
+    return new Context(this.text, newIdx);
   }
 
   success<T>(value: T): Success<T> {
