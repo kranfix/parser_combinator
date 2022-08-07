@@ -2,23 +2,16 @@ import { Failure, Parser } from "./foundation";
 
 export function any<T>(parsers: Parser<T>[]): Parser<T> {
   return (ctx) => {
-    let failure = ctx.failure("any match");
+    if (parsers.length === 0) return ctx.failure("any");
+    let failure: Failure | null = null;
     for (const parser of parsers) {
       const res = parser(ctx);
       if (res.success) return res;
-      if (failure.ctx.index < res.ctx.index) failure = res as Failure;
+      if (!failure || failure.ctx.index < res.ctx.index) {
+        failure = res as Failure;
+      }
     }
     return failure;
-  };
-}
-
-export function optional<T, N extends NonNullable<T>>(
-  parser: Parser<N>
-): Parser<N | null> {
-  return (ctx) => {
-    const res = parser(ctx);
-    if (res.success) return res;
-    return ctx.success(null);
   };
 }
 
@@ -28,7 +21,10 @@ export function many<T>(parser: Parser<T>): Parser<T[]> {
     let nextCtx = ctx;
     while (true) {
       const res = parser(nextCtx);
-      if (!res.success) break;
+      if (!res.success) {
+        if (nextCtx.index == res.ctx.index) break;
+        return res as Failure;
+      }
       values.push(res.value);
       nextCtx = res.ctx;
     }
