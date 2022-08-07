@@ -1,5 +1,5 @@
-import { any, map } from "./combinator";
-import { Context, Failure, Result } from "./foundation";
+import { any, many, map, sequence } from "./combinator";
+import { Context, Failure, Result, formatFailure } from "./foundation";
 
 // Expresion
 type Expr = boolean | number | Call | null;
@@ -18,7 +18,7 @@ export function parse(text: string): Expr {
 
 // Expresion parser
 export function expr(ctx: Context): Result<Expr> {
-  return any<Expr>([nullLiteral, booleanLiteral, numberLiteral])(ctx);
+  return any<Expr>([call, nullLiteral, booleanLiteral, numberLiteral])(ctx);
 }
 
 function nullLiteral(ctx: Context): Result<null> {
@@ -45,4 +45,39 @@ export function numberLiteral(ctx: Context): Result<number> {
     (ctx) => ctx.parse_regex(/[+\-]?[0-9]+(\.[0-9]*)?/g, "number"),
     parseFloat
   )(ctx);
+}
+
+export function identifier(ctx: Context): Result<string> {
+  return ctx.parse_regex(/^[a-zA-Z][a-zA-Z0-9]*/g, "identifier");
+}
+
+const call = map(
+  sequence<any>([
+    identifier,
+    (ctx) => ctx.parse_str("("),
+    args,
+    (ctx) => ctx.parse_str(")"),
+  ]),
+  ([fnName, _lparen, argList, _rparen]: [string, "(", Expr[], ")"]): Call => ({
+    target: fnName,
+    args: argList,
+  })
+);
+
+export function args(ctx: Context): Result<Expr[]> {
+  const first_res = expr(ctx);
+  if (!first_res.success) {
+    if (ctx.index === first_res.ctx.index) return ctx.success([]);
+    return first_res as Failure;
+  }
+
+  const rest_res = many(trailingArg)(first_res.ctx);
+  if (!rest_res.success) return rest_res as Failure;
+  return rest_res.ctx.success([first_res.value, ...rest_res.value]);
+}
+
+export function trailingArg(ctx: Context): Result<Expr> {
+  const comma_res = ctx.parse_str(",");
+  if (!comma_res.success) return comma_res as Failure;
+  return expr(comma_res.ctx);
 }
