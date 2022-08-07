@@ -10,11 +10,10 @@ interface Call {
 }
 
 export function parse(text: string): Expr {
-  const _ctx = new Context(text);
-  const res = expr(_ctx);
+  const ctx = new Context(text);
+  const res = expr(ctx);
   if (res.success) return res.value;
-  const { expected, ctx } = res as Failure;
-  throw `Parse error, expected ${expected} at char ${ctx.index}`;
+  throw formatFailure(res as Failure);
 }
 
 // Expresion parser
