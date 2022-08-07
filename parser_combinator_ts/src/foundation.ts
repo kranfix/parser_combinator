@@ -63,3 +63,9 @@ export type Failure = Readonly<{
   expected: string;
   ctx: Context;
 }>;
+
+export function formatFailure({ expected, ctx }: Failure) {
+  const prev_text = ctx.text.substring(0, ctx.index);
+  const index = ctx.index;
+  return `Parse error, expected ${expected} at char ${index}: ${prev_text}${expected}`;
+}
