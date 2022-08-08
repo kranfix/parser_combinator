@@ -27,28 +27,24 @@ function nullLiteral(ctx: Context): Result<null> {
   return ctx.failure("null");
 }
 
-export function booleanLiteral(ctx: Context): Result<boolean> {
-  return any<boolean>([
-    map(
-      (ctx) => ctx.parse_str("true"),
-      (_) => true
-    ),
-    map(
-      (ctx) => ctx.parse_str("false"),
-      (_) => false
-    ),
-  ])(ctx);
-}
+export const booleanLiteral = any<boolean>([
+  map(
+    (ctx) => ctx.parse_str("true"),
+    (_) => true
+  ),
+  map(
+    (ctx) => ctx.parse_str("false"),
+    (_) => false
+  ),
+]);
 
-export function numberLiteral(ctx: Context): Result<number> {
-  return map(
-    (ctx) => ctx.parse_regex(/[+\-]?[0-9]+(\.[0-9]*)?/g, "number"),
-    parseFloat
-  )(ctx);
-}
+export const numberLiteral = map(
+  (ctx) => ctx.parse_regex(/[+\-]?[0-9]+(\.[0-9]*)?/g, "number"),
+  parseFloat
+);
 
 export function identifier(ctx: Context): Result<string> {
-  return ctx.parse_regex(/^[a-zA-Z][a-zA-Z0-9]*/g, "identifier");
+  return ctx.parse_regex(/[a-zA-Z][a-zA-Z0-9]*/g, "identifier");
 }
 
 const call = map(
