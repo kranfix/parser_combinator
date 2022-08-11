@@ -1,5 +1,3 @@
-use std::num::ParseIntError;
-
 use nom::{
   branch::alt,
   bytes::complete::tag,
@@ -22,19 +20,23 @@ pub enum Expr {
   Call(Call),
 }
 
-// our top level parsing function that takes care of creating a `Ctx`, and unboxing the final AST (or throwing)
-//pub fn parse(code: String) -> std::result::Result<Expr, String> {
-//  let ctx = Ctx::new(&code);
-//  let res = expr(&ctx);
-//  let success = res.map_err(|f| {
-//    format!(
-//      "Parse error, expected {} at char {}",
-//      f.expected(),
-//      f.index()
-//    )
-//  })?;
-//  Ok(success.val())
-//}
+pub fn parse(input: &str) -> std::result::Result<Expr, String> {
+  let res = expr(input);
+  let (_, val) = res.map_err(|f| match f {
+    nom::Err::Error(e) => format!("{}", e),
+    nom::Err::Failure(e) => format!("{}", e),
+    nom::Err::Incomplete(e) => match e {
+      nom::Needed::Unknown => "Incomplete".to_string(),
+      nom::Needed::Size(s) => format!("Incomplete: {}", s),
+    },
+  })?;
+  Ok(val)
+}
+
+pub fn expr(input: &str) -> nom::IResult<&str, Expr> {
+  let (input, val) = expr_bool.or(expr_number).parse(input)?;
+  Ok((input, val))
+}
 
 fn bool_literal(input: &str) -> nom::IResult<&str, bool> {
   let (input, val) = alt((tag("true"), tag("false")))(input)?;
@@ -54,18 +56,12 @@ fn expr_bool(input: &str) -> nom::IResult<&str, Expr> {
 fn number_literal(input: &str) -> nom::IResult<&str, i32> {
   let mut acc = "".to_string();
   let sign = char('-').or(char('+'));
-  println!("xxxxxxxxx");
-  //let (input, val) = opt(sign)(input)?;
-  //if let Some(s) = val {
-  //  acc.push(s);
-  //}
 
   let (input, (sign, first)) = (opt(sign), digit1).parse(input)?;
   if let Some(s) = sign {
     acc.push(s);
   }
   acc.push_str(&first);
-  println!("==========={}", acc);
   let val = match acc.parse::<i32>() {
     Ok(v) => v,
     Err(_) => {
@@ -129,4 +125,46 @@ mod test {
     assert_eq!(val, -12);
     assert_eq!(input, "a");
   }
+
+  // #[test]
+  // fn test_ident() {
+  //   let ctx = Ctx::new("foo");
+  //   let res = ident(&ctx).unwrap();
+  //   assert_eq!(res.val(), "foo");
+  //   assert_eq!(res.index(), 3);
+  //   assert_eq!(res.ctx().text_slice(), "");
+
+  //   let ctx = res.ctx();
+  //   let res = ident(&ctx);
+  //   assert_eq!(res.is_err(), true);
+
+  //   let ctx = Ctx::new("foo(");
+  //   let res = ident(&ctx).unwrap();
+  //   assert_eq!(res.val(), "foo");
+  //   assert_eq!(res.index(), 3);
+  //   assert_eq!(res.ctx().text_slice(), "(");
+  // }
+
+  //   #[test]
+  //   fn test_call() {
+  //     let ctx = Ctx::new("foo()");
+  //     let success = call(&ctx).unwrap();
+  //     assert_eq!(success.index(), 5);
+  //     assert_eq!(success.val().target, "foo");
+  //     assert_eq!(success.val().args.len(), 0);
+
+  //     let ctx = Ctx::new("Foo(Bar(1,2,true),false)");
+  //     let success = call(&ctx).unwrap();
+  //     assert_eq!(success.index(), 24);
+  //     assert_eq!(success.val().target, "Foo");
+  //     assert_eq!(success.val().args.len(), 2);
+  //     assert_eq!(
+  //       success.val().args[0],
+  //       Expr::Call(Call {
+  //         target: "Bar".to_string(),
+  //         args: vec![Expr::Num(1), Expr::Num(2), Expr::Bool(true)]
+  //       })
+  //     );
+  //     assert_eq!(success.val().args[1], Expr::Bool(false));
+  //   }
 }
