@@ -1,7 +1,10 @@
 use nom::{
   branch::alt,
   bytes::complete::tag,
-  character::{complete::char, complete::digit1},
+  character::{
+    complete::char,
+    complete::{alpha1, alphanumeric0, digit1},
+  },
   combinator::opt,
   sequence::Tuple,
   Parser,
@@ -79,6 +82,15 @@ fn expr_number(input: &str) -> nom::IResult<&str, Expr> {
   Ok((input, Expr::Num(val)))
 }
 
+// our regexp to match identifiers
+fn ident(input: &str) -> nom::IResult<&str, String> {
+  //let re = regex::Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
+  //ctx.parse_regex(re, "identifier".to_owned())
+  let (input, (first, second)) = alpha1.and(alphanumeric0).parse(input)?;
+  let val = format!("{}{}", first, second);
+  return Ok((input, val));
+}
+
 #[cfg(test)]
 mod test {
   use super::*;
@@ -126,24 +138,23 @@ mod test {
     assert_eq!(input, "a");
   }
 
-  // #[test]
-  // fn test_ident() {
-  //   let ctx = Ctx::new("foo");
-  //   let res = ident(&ctx).unwrap();
-  //   assert_eq!(res.val(), "foo");
-  //   assert_eq!(res.index(), 3);
-  //   assert_eq!(res.ctx().text_slice(), "");
+  #[test]
+  fn test_ident() {
+    let (input, val) = ident("foo").unwrap();
+    assert_eq!(val, "foo");
+    assert_eq!(input, "");
 
-  //   let ctx = res.ctx();
-  //   let res = ident(&ctx);
-  //   assert_eq!(res.is_err(), true);
+    let res = ident(input);
+    assert_eq!(res.is_err(), true);
 
-  //   let ctx = Ctx::new("foo(");
-  //   let res = ident(&ctx).unwrap();
-  //   assert_eq!(res.val(), "foo");
-  //   assert_eq!(res.index(), 3);
-  //   assert_eq!(res.ctx().text_slice(), "(");
-  // }
+    let (input, val) = ident("foo(").unwrap();
+    assert_eq!(val, "foo");
+    assert_eq!(input, "(");
+
+    let (input, val) = ident("foo2A3dEz(").unwrap();
+    assert_eq!(val, "foo2A3dEz");
+    assert_eq!(input, "(");
+  }
 
   //   #[test]
   //   fn test_call() {
