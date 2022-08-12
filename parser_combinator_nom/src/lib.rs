@@ -44,7 +44,6 @@ pub fn expr(input: &str) -> nom::IResult<&str, Expr> {
 
 fn bool_literal(input: &str) -> nom::IResult<&str, bool> {
   let (input, val) = alt((tag("true"), tag("false")))(input)?;
-  println!("aaa: {}", input);
   if val == "true" {
     Ok((input, true))
   } else {
