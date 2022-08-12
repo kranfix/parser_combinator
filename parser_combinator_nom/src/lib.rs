@@ -5,8 +5,9 @@ use nom::{
     complete::char,
     complete::{alpha1, alphanumeric0, digit1},
   },
-  combinator::opt,
-  sequence::Tuple,
+  combinator::{map, opt},
+  multi::many0,
+  sequence::{delimited, preceded, Tuple},
   Parser,
 };
 
@@ -37,7 +38,7 @@ pub fn parse(input: &str) -> std::result::Result<Expr, String> {
 }
 
 pub fn expr(input: &str) -> nom::IResult<&str, Expr> {
-  let (input, val) = expr_bool.or(expr_number).parse(input)?;
+  let (input, val) = expr_bool.or(expr_number).or(expr_call).parse(input)?;
   Ok((input, val))
 }
 
@@ -89,6 +90,33 @@ fn ident(input: &str) -> nom::IResult<&str, String> {
   let (input, (first, second)) = alpha1.and(alphanumeric0).parse(input)?;
   let val = format!("{}{}", first, second);
   return Ok((input, val));
+}
+
+fn call(input: &str) -> nom::IResult<&str, Call> {
+  let trailing_arg = preceded(char(','), expr);
+  let non_empty_arg_list = map(expr.and(many0(trailing_arg)), |(head, tail)| {
+    let mut vec = vec![head];
+    vec.extend_from_slice(&tail);
+    vec
+  });
+  let arg_list = map(opt(non_empty_arg_list), |v| match v {
+    Some(v) => v,
+    None => vec![],
+  });
+
+  let (input, (target, args)) = (ident, delimited(char('('), arg_list, char(')'))).parse(input)?;
+  Ok((
+    input,
+    Call {
+      target: target,
+      args: args,
+    },
+  ))
+}
+
+fn expr_call(input: &str) -> nom::IResult<&str, Expr> {
+  let (input, val) = call(input)?;
+  Ok((input, Expr::Call(val)))
 }
 
 #[cfg(test)]
@@ -156,26 +184,24 @@ mod test {
     assert_eq!(input, "(");
   }
 
-  //   #[test]
-  //   fn test_call() {
-  //     let ctx = Ctx::new("foo()");
-  //     let success = call(&ctx).unwrap();
-  //     assert_eq!(success.index(), 5);
-  //     assert_eq!(success.val().target, "foo");
-  //     assert_eq!(success.val().args.len(), 0);
+  #[test]
+  fn test_call() {
+    let (input, val) = call("foo()").unwrap();
+    assert_eq!(input, "");
+    assert_eq!(val.target, "foo");
+    assert_eq!(val.args.len(), 0);
 
-  //     let ctx = Ctx::new("Foo(Bar(1,2,true),false)");
-  //     let success = call(&ctx).unwrap();
-  //     assert_eq!(success.index(), 24);
-  //     assert_eq!(success.val().target, "Foo");
-  //     assert_eq!(success.val().args.len(), 2);
-  //     assert_eq!(
-  //       success.val().args[0],
-  //       Expr::Call(Call {
-  //         target: "Bar".to_string(),
-  //         args: vec![Expr::Num(1), Expr::Num(2), Expr::Bool(true)]
-  //       })
-  //     );
-  //     assert_eq!(success.val().args[1], Expr::Bool(false));
-  //   }
+    let (input, val) = call("Foo(Bar(1,2,true),false)").unwrap();
+    assert_eq!(input, "");
+    assert_eq!(val.target, "Foo");
+    assert_eq!(val.args.len(), 2);
+    assert_eq!(
+      val.args[0],
+      Expr::Call(Call {
+        target: "Bar".to_string(),
+        args: vec![Expr::Num(1), Expr::Num(2), Expr::Bool(true)]
+      })
+    );
+    assert_eq!(val.args[1], Expr::Bool(false));
+  }
 }
