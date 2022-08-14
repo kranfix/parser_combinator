@@ -38,6 +38,25 @@ func TestMatchString(t *testing.T) {
 	}
 }
 
+func TestMatchRegex(t *testing.T) {
+	re := "[A-Za-z]+"
+	c := New("5 Hello, world!")
+	c, value, err := c.ParseRegex(re, "word")
+	msg := testFailure(c, value, err, 0)
+	if msg != nil {
+		t.Errorf(*msg)
+		return
+	}
+
+	c = c.skip(2)
+	c, value, err = c.ParseRegex(re, "word")
+	msg = testSuccess(c, value, err, "Hello", 7)
+	if msg != nil {
+		t.Errorf(*msg)
+		return
+	}
+}
+
 func testSuccess(ctx Context, value string, err *string, match string, index int) *string {
 	if err != nil {
 		msg := fmt.Sprintf("Error: %s\n", *err)

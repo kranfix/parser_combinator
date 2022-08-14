@@ -45,8 +45,15 @@ func (c Context) ParseRegex(re, expected string) (Context, string, *string) {
 		msg := "Error in regexp.Compile: " + err.Error()
 		return Failure[string](c, msg)
 	}
-	r.FindString(c.text[c.index:])
-	return Failure[string](c, expected)
+	text := c.text[c.index:]
+	bytes := []byte(text)
+	loc := r.FindIndex(bytes)
+	if loc[0] != 0 {
+		return Failure[string](c, expected)
+	}
+	foundText := string(bytes[loc[0]:loc[1]])
+	ctx := c.skip(len(foundText))
+	return Success(ctx, foundText)
 }
 
 func Success[T any](ctx Context, value T) (Context, T, *string) {
