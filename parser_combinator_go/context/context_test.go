@@ -1,4 +1,4 @@
-package Context
+package context
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 func TestMatchString(t *testing.T) {
 	c := New("abc")
 	c, value, err := c.ParseStr("xy")
-	msg := testFailure(c, value, err, 0)
+	msg := CheckFailure(c, value, err, 0)
 	if msg != nil {
 		t.Errorf(*msg)
 		return
@@ -17,21 +17,21 @@ func TestMatchString(t *testing.T) {
 
 	c = New("abcxyz")
 	c, value, err = c.ParseStr("abc")
-	msg = testSuccess(c, value, err, "abc", 3)
+	msg = CheckSuccess(c, value, err, "abc", 3)
 	if msg != nil {
 		t.Errorf(*msg)
 		return
 	}
 
 	c, value, err = c.ParseStr("mnp")
-	msg = testFailure(c, value, err, 3)
+	msg = CheckFailure(c, value, err, 3)
 	if msg != nil {
 		t.Errorf(*msg)
 		return
 	}
 
 	c, value, err = c.ParseStr("xyz")
-	msg = testSuccess(c, value, err, "xyz", 6)
+	msg = CheckSuccess(c, value, err, "xyz", 6)
 	if msg != nil {
 		t.Errorf(*msg)
 		return
@@ -42,7 +42,7 @@ func TestMatchRegex(t *testing.T) {
 	re := "[A-Za-z]+"
 	c := New("5 Hello, world!")
 	c, value, err := c.ParseRegex(re, "word")
-	msg := testFailure(c, value, err, 0)
+	msg := CheckFailure(c, value, err, 0)
 	if msg != nil {
 		t.Errorf(*msg)
 		return
@@ -50,14 +50,14 @@ func TestMatchRegex(t *testing.T) {
 
 	c = c.skip(2)
 	c, value, err = c.ParseRegex(re, "word")
-	msg = testSuccess(c, value, err, "Hello", 7)
+	msg = CheckSuccess(c, value, err, "Hello", 7)
 	if msg != nil {
 		t.Errorf(*msg)
 		return
 	}
 }
 
-func testSuccess(ctx Context, value string, err *string, match string, index int) *string {
+func CheckSuccess(ctx Context, value string, err *string, match string, index int) *string {
 	if err != nil {
 		msg := fmt.Sprintf("Error: %s\n", *err)
 		return &msg
@@ -71,7 +71,7 @@ func testSuccess(ctx Context, value string, err *string, match string, index int
 	return nil
 }
 
-func testFailure(ctx Context, value string, err *string, index int) *string {
+func CheckFailure(ctx Context, value string, err *string, index int) *string {
 	if err == nil {
 		msg := fmt.Sprintf("Error: response must be a failure")
 		return &msg

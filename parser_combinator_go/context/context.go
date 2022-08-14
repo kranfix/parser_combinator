@@ -1,4 +1,4 @@
-package Context
+package context
 
 import (
 	"regexp"
@@ -14,6 +14,10 @@ type Context struct {
 
 func New(text string) Context {
 	return Context{text: text, index: 0}
+}
+
+func (c Context) Index() int {
+	return c.index
 }
 
 func (c Context) skip(n Index) Context {
