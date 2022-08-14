@@ -32,7 +32,7 @@ func (c Context) ParseStr(match string) (Context, string, *string) {
 	}
 
 	text := c.text[c.index:endIdx]
-	if strings.Compare(text, match) >= 0 {
+	if strings.Compare(text, match) == 0 {
 		return Success(c.skip(length), match)
 	} else {
 		return Failure[string](c, match)
