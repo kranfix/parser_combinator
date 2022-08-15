@@ -73,12 +73,24 @@ func TestDelimited(t *testing.T) {
 }
 
 func TestSeparated(t *testing.T) {
-	parser := Separated(Str(","), Str("abc"))
-
+	parser1 := Separated(Str(","), Str("abc"))
 	c := context.New("abc,abc,abc,xyz")
-	c, value, err := parser(c)
-
+	c, value, err := parser1(c)
 	if err != nil || len(value) != 3 || c.Index() != 11 {
+		t.Errorf("Expected 'abc' but got '%v'", value)
+	}
+
+	parser2 := Separated(Str(","), Str("abc"))
+	c = context.New("_abc,abc,xyz")
+	c, value, err = parser2(c)
+	if err != nil || c.Index() != 0 {
+		t.Errorf("Expected '%s' at index %d", *err, c.Index())
+	}
+
+	parser3 := Separated(Str(","), Str("abc"))
+	c = context.New(",abc,abc,xyz")
+	c, value, err = parser3(c)
+	if err != nil || c.Index() != 0 {
 		t.Errorf("Expected 'abc' but got '%v'", value)
 	}
 }
