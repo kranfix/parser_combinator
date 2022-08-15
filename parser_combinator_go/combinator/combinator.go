@@ -1,6 +1,8 @@
 package combinator
 
-import "github.com/kranfix/parser_combinator/parser_combinator_go/context"
+import (
+	"github.com/kranfix/parser_combinator/parser_combinator_go/context"
+)
 
 type Parser[T any] func(ctx context.Context) (context.Context, T, *string)
 
@@ -32,6 +34,22 @@ func Any[T any](parsers []Parser[T]) Parser[T] {
 		}
 		var value T
 		return ctx, value, failure
+	}
+}
+
+func Many[T any](parser Parser[T]) Parser[[]T] {
+	return func(ctx context.Context) (context.Context, []T, *string) {
+		values := make([]T, 0, 50)
+		lastCtx := ctx
+		for {
+			ctx, value, err := parser(lastCtx)
+			if err != nil {
+				return lastCtx, values, nil
+			}
+			lastCtx = ctx
+			values = append(values, value)
+		}
+
 	}
 }
 

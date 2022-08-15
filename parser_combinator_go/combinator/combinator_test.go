@@ -24,6 +24,32 @@ func TestAny(t *testing.T) {
 	}
 }
 
+func TestMany(t *testing.T) {
+	parser := Many(Str("a"))
+
+	c := context.New("xaxaaa")
+
+	c, values, err := parser(c)
+	if err != nil || len(values) != 0 || c.Index() != 0 {
+		t.Errorf("Expected 'a' but got '%v'", values)
+	}
+
+	c, _, _ = c.ParseStr("x")
+
+	c, values, err = parser(c)
+	if err != nil || len(values) != 1 || c.Index() != 2 {
+		t.Errorf("Expected 'a' but got '%v'", values)
+	}
+
+	c, _, _ = c.ParseStr("x")
+
+	c, values, err = parser(c)
+	if err != nil || len(values) != 3 || c.Index() != 6 {
+		t.Errorf("Expected 'a' but got '%v'", values)
+	}
+	t.Logf("values: %v", values)
+}
+
 func TestDelimitedLeft(t *testing.T) {
 	parser := DelimitedLeft(Str(","), Str("abc"))
 
