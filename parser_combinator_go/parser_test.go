@@ -20,6 +20,12 @@ func TestBoolean(t *testing.T) {
 	if err != nil || value != false || c.Index() != 5 {
 		t.Errorf("Expected 'false' but got '%v'", value)
 	}
+
+	ctx = context.New("null")
+	c, value, err = Boolean(ctx)
+	if err == nil || c.Index() != 0 {
+		t.Errorf("Expected bool at index %d", c.Index())
+	}
 }
 
 func TestNumber(t *testing.T) {
@@ -51,5 +57,13 @@ func TestNumber(t *testing.T) {
 	c, value, err = Number(ctx)
 	if err != nil || value != -12 || c.Index() != 3 {
 		t.Errorf("Expected 'true' but got '%v'", value)
+	}
+}
+
+func TestCall(t *testing.T) {
+	ctx := context.New("Foo()")
+	c, value, err := Call(ctx)
+	if err != nil || c.Index() != 5 || value.target != "Foo" || len(value.args) != 0 {
+		t.Errorf("Expected 'Foo, []' but got '%v'", value)
 	}
 }
