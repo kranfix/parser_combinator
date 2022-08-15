@@ -71,3 +71,14 @@ func TestDelimited(t *testing.T) {
 		t.Errorf("Expected 'abc' but got '%v'", value)
 	}
 }
+
+func TestSeparated(t *testing.T) {
+	parser := Separated(Str(","), Str("abc"))
+
+	c := context.New("abc,abc,abc,xyz")
+	c, value, err := parser(c)
+
+	if err != nil || len(value) != 3 || c.Index() != 11 {
+		t.Errorf("Expected 'abc' but got '%v'", value)
+	}
+}

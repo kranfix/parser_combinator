@@ -98,3 +98,18 @@ func Delimited[T any, L any, R any](left Parser[L], main Parser[T], right Parser
 		return ctx, value, nil
 	}
 }
+
+func Separated[T, S any](separator Parser[S], main Parser[T]) Parser[[]T] {
+	isFirstSeparator := true
+	sep := func(ctx context.Context) (context.Context, S, *string) {
+		if isFirstSeparator {
+			isFirstSeparator = false
+			var value S
+			return ctx, value, nil
+		} else {
+			return separator(ctx)
+		}
+	}
+	leaded := DelimitedLeft(sep, main)
+	return Many(leaded)
+}
