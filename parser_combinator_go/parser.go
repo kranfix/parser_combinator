@@ -37,7 +37,7 @@ func Parse(text string) (Expression, error) {
 	ctx := context.New(text)
 	c, value, err := Expr(ctx)
 	if err != nil {
-		msg := fmt.Errorf("Expected %s at %d", *err, c.Index())
+		msg := fmt.Errorf("expected %s at %d", *err, c.Index())
 		return NumberT(0), msg
 	}
 	return value, nil

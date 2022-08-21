@@ -22,7 +22,7 @@ func TestBoolean(t *testing.T) {
 	}
 
 	ctx = context.New("null")
-	c, value, err = Boolean(ctx)
+	c, _, err = Boolean(ctx)
 	if err == nil || c.Index() != 0 {
 		t.Errorf("Expected bool at index %d", c.Index())
 	}
@@ -64,6 +64,6 @@ func TestCall(t *testing.T) {
 	ctx := context.New("Foo()")
 	c, value, err := Call(ctx)
 	if err != nil || c.Index() != 5 || value.target != "Foo" || len(value.args) != 0 {
-		t.Errorf("Expected 'Foo, []' but got '%v'", value)
+		t.Errorf("Expected 'Foo, []' but got '%v' at index %d", value, c.Index())
 	}
 }
