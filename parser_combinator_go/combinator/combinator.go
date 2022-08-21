@@ -100,15 +100,18 @@ func Delimited[T any, L any, R any](left Parser[L], main Parser[T], right Parser
 }
 
 func Separated[T, S any](separator Parser[S], main Parser[T]) Parser[[]T] {
-	counter := 0
-	sep := func(ctx context.Context) (context.Context, S, *string) {
-		if counter > 0 {
-			return separator(ctx)
+	skipSeparator := SkipFirst(separator)
+	return Many(DelimitedLeft(skipSeparator, main))
+}
+
+func SkipFirst[T any](parser Parser[T]) Parser[T] {
+	isFirst := true
+	return func(ctx context.Context) (context.Context, T, *string) {
+		if isFirst {
+			isFirst = false
+			var val T
+			return ctx, val, nil
 		}
-		counter += 1
-		var value S
-		return ctx, value, nil
+		return parser(ctx)
 	}
-	leaded := DelimitedLeft(sep, main)
-	return Many(leaded)
 }

@@ -82,7 +82,7 @@ func TestSeparated(t *testing.T) {
 
 	parser2 := Separated(Str(","), Str("abc"))
 	c = context.New("_abc,abc,xyz")
-	c, value, err = parser2(c)
+	c, _, err = parser2(c)
 	if err != nil || c.Index() != 0 {
 		t.Errorf("Expected '%s' at index %d", *err, c.Index())
 	}
