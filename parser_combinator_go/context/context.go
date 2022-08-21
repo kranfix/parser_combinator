@@ -52,7 +52,7 @@ func (c Context) ParseRegex(re, expected string) (Context, string, *string) {
 	text := c.text[c.index:]
 	bytes := []byte(text)
 	loc := r.FindIndex(bytes)
-	if loc[0] != 0 {
+	if len(loc) < 1 || loc[0] != 0 || loc[1] == loc[0] {
 		return Failure[string](c, expected)
 	}
 	foundText := string(bytes[loc[0]:loc[1]])
