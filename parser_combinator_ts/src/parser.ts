@@ -1,4 +1,11 @@
-import { any, many, map, sequence } from "./combinator";
+import {
+  any,
+  delimited,
+  delimitedLeft,
+  many,
+  map,
+  sequence,
+} from "./combinator";
 import { Context, Failure, Result, formatFailure } from "./foundation";
 
 // Expresion
@@ -47,17 +54,11 @@ export function identifier(ctx: Context): Result<string> {
   return ctx.parse_regex(/[a-zA-Z][a-zA-Z0-9]*/g, "identifier");
 }
 
+const lPara = (ctx: Context): Result<string> => ctx.parse_str("(");
+const rPara = (ctx: Context): Result<string> => ctx.parse_str(")");
 const call = map(
-  sequence<any>([
-    identifier,
-    (ctx) => ctx.parse_str("("),
-    args,
-    (ctx) => ctx.parse_str(")"),
-  ]),
-  ([fnName, _lparen, argList, _rparen]: [string, "(", Expr[], ")"]): Call => ({
-    target: fnName,
-    args: argList,
-  })
+  sequence<any>([identifier, delimited(lPara, args, rPara)]),
+  ([target, args]: [string, Expr[]]): Call => ({ target, args })
 );
 
 export function args(ctx: Context): Result<Expr[]> {
@@ -67,13 +68,8 @@ export function args(ctx: Context): Result<Expr[]> {
     return first_res as Failure;
   }
 
+  const trailingArg = delimitedLeft((ctx) => ctx.parse_str(","), expr);
   const rest_res = many(trailingArg)(first_res.ctx);
   if (!rest_res.success) return rest_res as Failure;
   return rest_res.ctx.success([first_res.value, ...rest_res.value]);
-}
-
-export function trailingArg(ctx: Context): Result<Expr> {
-  const comma_res = ctx.parse_str(",");
-  if (!comma_res.success) return comma_res as Failure;
-  return expr(comma_res.ctx);
 }
