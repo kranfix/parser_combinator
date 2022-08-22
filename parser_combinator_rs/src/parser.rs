@@ -1,5 +1,5 @@
 use crate::{
-  combinator::{any, many, ParserFn},
+  combinator::{any, delimited, many, ParserFn},
   foundation::{Ctx, Result},
 };
 
@@ -115,12 +115,14 @@ fn call(ctx: &Ctx) -> Result<Call> {
   let success = ident(ctx)?;
   let target = success.val();
 
-  let success = success.ctx().parse_str("(".to_owned())?;
+  let delimited_args = delimited(
+    |ctx| ctx.parse_str("(".to_string()),
+    args,
+    |ctx| ctx.parse_str(")".to_string()),
+  );
 
-  let success = args(success.ctx())?;
+  let success = delimited_args(success.ctx())?;
   let args = success.val();
-
-  let success = success.ctx().parse_str(")".to_owned())?;
 
   Ok(success.ctx().success(Call { target, args }))
 }
