@@ -19,7 +19,7 @@ func TestAny(t *testing.T) {
 	c = context.New("xyz")
 	c, value, err = parser(c)
 
-	if err != nil || len(value) != 0 || c.Index() != 0 {
+	if err == nil || len(value) != 0 || c.Index() != 0 {
 		t.Errorf("Expected 'b' but got '%v'", value)
 	}
 }

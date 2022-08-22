@@ -14,11 +14,7 @@ func Str(match string) Parser[string] {
 
 func Any[T any](parsers []Parser[T]) Parser[T] {
 	return func(ctx context.Context) (context.Context, T, *string) {
-		if len(parsers) == 0 {
-			return context.Failure[T](ctx, "Any: no parsers")
-		}
-
-		var failure *string = nil
+		failure := "Any: no parsers"
 		lastCtx := ctx
 		for _, parser := range parsers {
 			ctx, value, err := parser(ctx)
@@ -27,19 +23,19 @@ func Any[T any](parsers []Parser[T]) Parser[T] {
 				return ctx, value, nil
 			}
 
-			if failure != nil || lastCtx.Index() < ctx.Index() {
+			if lastCtx.Index() < ctx.Index() {
 				lastCtx = ctx
-				failure = err
+				failure = *err
 			}
 		}
 		var value T
-		return ctx, value, failure
+		return ctx, value, &failure
 	}
 }
 
 func Many[T any](parser Parser[T]) Parser[[]T] {
 	return func(ctx context.Context) (context.Context, []T, *string) {
-		values := make([]T, 0, 50)
+		values := []T{}
 		lastCtx := ctx
 		for {
 			ctx, value, err := parser(lastCtx)
