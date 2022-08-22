@@ -22,22 +22,6 @@ pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<T
   move |ctx| _parser(ctx, &parsers)
 }
 
-//pub fn optional<T: Clone>(
-//  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
-//) -> impl for<'a> Fn(&'a Ctx) -> Result<Option<T>> {
-//  move |ctx| {
-//    let ok = match parser(ctx) {
-//      Ok(success) => {
-//        let ctx = success.ctx();
-//        let val = Some(success.val());
-//        ctx.success(val)
-//      }
-//      Err(_) => ctx.success(None),
-//    };
-//    Ok(ok)
-//  }
-//}
-
 // pub fn sequence<T: Clone>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
 //   fn _parser<T: Clone>(ctx: &Ctx, parsers: &Vec<ParserFn<T>>) -> Result<Vec<T>> {
 //     let mut values: Vec<T> = vec![];
@@ -70,6 +54,22 @@ pub fn many<T: Clone>(
       }
     }
     Ok(next_ctx.success(values))
+  }
+}
+
+pub fn delimited<T: Clone, L, R>(
+  left: impl for<'a> Fn(&'a Ctx) -> Result<L>,
+  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
+  right: impl for<'a> Fn(&'a Ctx) -> Result<R>,
+) -> impl for<'a> Fn(&'a Ctx) -> Result<T> {
+  move |ctx| {
+    let l_res = left(ctx)?;
+    let mut next_ctx = l_res.ctx().to_owned();
+    let res = parser(&next_ctx)?;
+    next_ctx = res.ctx().to_owned();
+    let r_res = right(&next_ctx)?;
+    next_ctx = r_res.ctx().to_owned();
+    Ok(next_ctx.success(res.val()))
   }
 }
 
