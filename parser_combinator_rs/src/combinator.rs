@@ -37,14 +37,63 @@ pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<T
 //   move |ctx| _parser(ctx, &parsers)
 // }
 
-pub fn many<T: Clone>(
+// pub fn many<T: Clone>(
+//   parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
+// ) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
+//   move |ctx| {
+//     let mut values: Vec<T> = vec![];
+//     let mut next_ctx = ctx.to_owned();
+//     loop {
+//       match parser(&next_ctx) {
+//         Err(_) => break,
+//         Ok(success) => {
+//           next_ctx = success.ctx().to_owned();
+//           let val = success.val();
+//           values.push(val);
+//         }
+//       }
+//     }
+//     Ok(next_ctx.success(values))
+//   }
+// }
+
+pub fn delimited<T: Clone, L, R>(
+  left: impl for<'a> Fn(&'a Ctx) -> Result<L>,
+  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
+  right: impl for<'a> Fn(&'a Ctx) -> Result<R>,
+) -> impl for<'a> Fn(&'a Ctx) -> Result<T> {
+  move |ctx| {
+    let l_res = left(ctx)?;
+    let mut next_ctx = l_res.ctx();
+    let res = parser(&next_ctx)?;
+    next_ctx = res.ctx();
+    let r_res = right(&next_ctx)?;
+    next_ctx = r_res.ctx();
+    Ok(next_ctx.success(res.val()))
+  }
+}
+
+pub fn separated<T: Clone>(
+  separator: impl for<'a> Fn(&'a Ctx) -> Result<String>,
   parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
 ) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
   move |ctx| {
     let mut values: Vec<T> = vec![];
     let mut next_ctx = ctx.to_owned();
+    let mut is_first = true;
+
     loop {
-      match parser(&next_ctx) {
+      let mut inner_ctx = next_ctx.to_owned();
+      if is_first {
+        is_first = false;
+      } else {
+        let sep_res = match separator(&inner_ctx) {
+          Err(_) => break,
+          Ok(success) => success,
+        };
+        inner_ctx = sep_res.ctx().to_owned();
+      }
+      match parser(&inner_ctx) {
         Err(_) => break,
         Ok(success) => {
           next_ctx = success.ctx().to_owned();
@@ -54,22 +103,6 @@ pub fn many<T: Clone>(
       }
     }
     Ok(next_ctx.success(values))
-  }
-}
-
-pub fn delimited<T: Clone, L, R>(
-  left: impl for<'a> Fn(&'a Ctx) -> Result<L>,
-  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
-  right: impl for<'a> Fn(&'a Ctx) -> Result<R>,
-) -> impl for<'a> Fn(&'a Ctx) -> Result<T> {
-  move |ctx| {
-    let l_res = left(ctx)?;
-    let mut next_ctx = l_res.ctx().to_owned();
-    let res = parser(&next_ctx)?;
-    next_ctx = res.ctx().to_owned();
-    let r_res = right(&next_ctx)?;
-    next_ctx = r_res.ctx().to_owned();
-    Ok(next_ctx.success(res.val()))
   }
 }
 

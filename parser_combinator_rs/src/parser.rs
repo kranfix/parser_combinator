@@ -1,5 +1,5 @@
 use crate::{
-  combinator::{any, delimited, many, ParserFn},
+  combinator::{any, delimited, separated, ParserFn},
   foundation::{Ctx, Result},
 };
 
@@ -86,28 +86,11 @@ fn bool_literal<'a>(ctx: &'a Ctx) -> Result<bool> {
   ])(ctx)
 }
 
-// trailingArg = ',' arg
-fn trailing_arg<'a>(ctx: &'a Ctx) -> Result<Expr> {
-  let success = ctx.parse_str(",".to_owned())?;
-  expr(success.ctx())
-}
-
 // args = expr ( trailingArg ) *
 fn args<'a>(ctx: &'a Ctx) -> Result<Vec<Expr>> {
-  let mut exprs: Vec<Expr> = vec![];
-  let first = match expr(ctx) {
-    Ok(success) => success,
-    Err(_) => return Ok(ctx.success(exprs)),
-  };
-  exprs.push(first.val());
-
-  let others = many(|ctx| trailing_arg(ctx));
-  let sucess = others(first.ctx())?;
-  let others = sucess.val();
-
-  exprs.extend_from_slice(&others);
-
-  Ok(sucess.ctx().success(exprs))
+  let comma = Box::new(|ctx: &Ctx| ctx.parse_str(",".to_owned()));
+  let parser = separated(comma, expr);
+  parser(ctx)
 }
 
 // call = ident "(" args ")"
