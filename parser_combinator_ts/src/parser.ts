@@ -62,14 +62,11 @@ const call = map(
 );
 
 export function args(ctx: Context): Result<Expr[]> {
-  const first_res = expr(ctx);
-  if (!first_res.success) {
-    if (ctx.index === first_res.ctx.index) return ctx.success([]);
-    return first_res as Failure;
-  }
-
-  const trailingArg = delimitedLeft((ctx) => ctx.parse_str(","), expr);
-  const rest_res = many(trailingArg)(first_res.ctx);
-  if (!rest_res.success) return rest_res as Failure;
-  return rest_res.ctx.success([first_res.value, ...rest_res.value]);
+  let isFirst = true;
+  const skipFirstComma = (ctx) => {
+    if (isFirst) isFirst = false;
+    return ctx.parse_str(isFirst ? "" : ",");
+  };
+  const trailingArg = delimitedLeft(skipFirstComma, expr);
+  return many(trailingArg)(ctx);
 }
