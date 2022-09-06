@@ -1,4 +1,5 @@
 use crate::foundation::{Ctx, Result};
+use std::cell::Cell;
 
 pub type ParserFn<T> = Box<dyn for<'a> Fn(&'a Ctx) -> Result<T>>;
 
@@ -37,25 +38,25 @@ pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<T
 //   move |ctx| _parser(ctx, &parsers)
 // }
 
-// pub fn many<T: Clone>(
-//   parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
-// ) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
-//   move |ctx| {
-//     let mut values: Vec<T> = vec![];
-//     let mut next_ctx = ctx.to_owned();
-//     loop {
-//       match parser(&next_ctx) {
-//         Err(_) => break,
-//         Ok(success) => {
-//           next_ctx = success.ctx().to_owned();
-//           let val = success.val();
-//           values.push(val);
-//         }
-//       }
-//     }
-//     Ok(next_ctx.success(values))
-//   }
-// }
+pub fn many<T: Clone>(
+  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
+) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
+  move |ctx| {
+    let mut values: Vec<T> = vec![];
+    let mut next_ctx = ctx.to_owned();
+    loop {
+      match parser(&next_ctx) {
+        Err(_) => break,
+        Ok(success) => {
+          next_ctx = success.ctx().to_owned();
+          let val = success.val();
+          values.push(val);
+        }
+      }
+    }
+    Ok(next_ctx.success(values))
+  }
+}
 
 pub fn delimited<T: Clone, L, R>(
   left: impl for<'a> Fn(&'a Ctx) -> Result<L>,
@@ -73,46 +74,33 @@ pub fn delimited<T: Clone, L, R>(
   }
 }
 
+pub fn delimited_left<T: Clone, L>(
+  left: impl for<'a> Fn(&'a Ctx) -> Result<L>,
+  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
+) -> impl for<'a> Fn(&'a Ctx) -> Result<T> {
+  move |ctx| {
+    let l_res = left(ctx)?;
+    let next_ctx = l_res.ctx();
+    parser(&next_ctx)
+  }
+}
+
 pub fn separated<T: Clone>(
   separator: impl for<'a> Fn(&'a Ctx) -> Result<String>,
   parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
 ) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
-  move |ctx| {
-    let mut values: Vec<T> = vec![];
-    let mut next_ctx = ctx.to_owned();
-    let mut is_first = true;
-
-    loop {
-      let mut inner_ctx = next_ctx.to_owned();
-      if is_first {
-        is_first = false;
-      } else {
-        let sep_res = match separator(&inner_ctx) {
-          Err(_) => break,
-          Ok(success) => success,
-        };
-        inner_ctx = sep_res.ctx().to_owned();
-      }
-      match parser(&inner_ctx) {
-        Err(_) => break,
-        Ok(success) => {
-          next_ctx = success.ctx().to_owned();
-          let val = success.val();
-          values.push(val);
-        }
-      }
+  let is_firt = Cell::new(true);
+  let skip_first = move |ctx: &Ctx| {
+    if is_firt.get() {
+      is_firt.set(false);
+      Ok(ctx.success("".to_owned()))
+    } else {
+      separator(ctx)
     }
-    Ok(next_ctx.success(values))
-  }
-}
+  };
 
-// a convenience method that will map a Success to callback, to let us do common things like build AST nodes from input strings.
-//function map<A, B>(parser: Parser<A>, fn: (val: A) => B): Parser<B> {
-//  return ctx => {
-//    const res = parser(ctx);
-//    return res.success ? success(res.ctx, fn(res.value)) : res;
-//  };
-//}
+  many(delimited_left(skip_first, parser))
+}
 
 //fn map<T: Clone, R>(
 //  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
