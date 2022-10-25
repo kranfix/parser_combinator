@@ -17,8 +17,8 @@ pub enum Expr {
 }
 
 // our top level parsing function that takes care of creating a `Ctx`, and unboxing the final AST (or throwing)
-pub fn parse(code: String) -> std::result::Result<Expr, String> {
-  let ctx = Ctx::new(&code);
+pub fn parse(code: &str) -> std::result::Result<Expr, String> {
+  let ctx = Ctx::new(code);
   let res = expr(&ctx);
   let success = res.map_err(|f| {
     format!(
