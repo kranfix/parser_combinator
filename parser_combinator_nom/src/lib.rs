@@ -64,7 +64,7 @@ fn number_literal(input: &str) -> nom::IResult<&str, i32> {
   if let Some(s) = sign {
     acc.push(s);
   }
-  acc.push_str(&first);
+  acc.push_str(first);
   let val = match acc.parse::<i32>() {
     Ok(v) => v,
     Err(_) => {
@@ -88,7 +88,7 @@ fn ident(input: &str) -> nom::IResult<&str, String> {
   //ctx.parse_regex(re, "identifier".to_owned())
   let (input, (first, second)) = alpha1.and(alphanumeric0).parse(input)?;
   let val = format!("{}{}", first, second);
-  return Ok((input, val));
+  Ok((input, val))
 }
 
 fn call(input: &str) -> nom::IResult<&str, Call> {
@@ -104,13 +104,7 @@ fn call(input: &str) -> nom::IResult<&str, Call> {
   });
 
   let (input, (target, args)) = (ident, delimited(char('('), arg_list, char(')'))).parse(input)?;
-  Ok((
-    input,
-    Call {
-      target: target,
-      args: args,
-    },
-  ))
+  Ok((input, Call { target, args }))
 }
 
 fn expr_call(input: &str) -> nom::IResult<&str, Expr> {
@@ -126,11 +120,11 @@ mod test {
   #[test]
   fn test_bool_literal() {
     let (input, val) = bool_literal("truefalsenull").unwrap();
-    assert_eq!(val, true);
+    assert!(val);
     assert_eq!(input, "falsenull");
 
     let (input, val) = bool_literal(input).unwrap();
-    assert_eq!(val, false);
+    assert!(!val);
     assert_eq!(input, "null");
 
     let err = bool_literal(input).unwrap_err();
@@ -172,7 +166,7 @@ mod test {
     assert_eq!(input, "");
 
     let res = ident(input);
-    assert_eq!(res.is_err(), true);
+    assert!(res.is_err());
 
     let (input, val) = ident("foo(").unwrap();
     assert_eq!(val, "foo");
