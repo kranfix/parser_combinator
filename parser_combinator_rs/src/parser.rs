@@ -31,7 +31,7 @@ pub fn parse(code: String) -> std::result::Result<Expr, String> {
 }
 
 // expr = call | number_literal | boolean_literal;
-fn expr<'a>(ctx: &'a Ctx) -> Result<Expr> {
+fn expr(ctx: &Ctx) -> Result<Expr> {
   // [call, numberLiteral]
   let parsers: Vec<ParserFn<Expr>> = vec![
     // bool literal
@@ -57,13 +57,13 @@ fn expr<'a>(ctx: &'a Ctx) -> Result<Expr> {
 }
 
 // our regexp to match identifiers
-fn ident<'a>(ctx: &'a Ctx) -> Result<String> {
+fn ident(ctx: &Ctx) -> Result<String> {
   let re = regex::Regex::new(r"^[a-zA-Z_][a-zA-Z0-9_]*").unwrap();
   ctx.parse_regex(re, "identifier".to_owned())
 }
 
 // a regexp parser to match a number string
-fn number_literal<'a>(ctx: &'a Ctx) -> Result<i32> {
+fn number_literal(ctx: &Ctx) -> Result<i32> {
   let re = regex::Regex::new(r"^[+\-]?[0-9]+(\.[0-9]*)?").unwrap();
   let success = ctx.parse_regex(re, "number".to_owned())?;
   let result = success.val().parse();
@@ -73,7 +73,7 @@ fn number_literal<'a>(ctx: &'a Ctx) -> Result<i32> {
   }
 }
 
-fn bool_literal<'a>(ctx: &'a Ctx) -> Result<bool> {
+fn bool_literal(ctx: &Ctx) -> Result<bool> {
   any(vec![
     Box::new(|ctx| {
       let target = ctx.parse_str("true".to_string())?;
@@ -87,7 +87,7 @@ fn bool_literal<'a>(ctx: &'a Ctx) -> Result<bool> {
 }
 
 // args = expr ( trailingArg ) *
-fn args<'a>(ctx: &'a Ctx) -> Result<Vec<Expr>> {
+fn args(ctx: &Ctx) -> Result<Vec<Expr>> {
   let comma = Box::new(|ctx: &Ctx| ctx.parse_str(",".to_owned()));
   let parser = separated(comma, expr);
   parser(ctx)
@@ -119,19 +119,19 @@ mod test {
   fn test_bool_literal() {
     let ctx = Ctx::new("truefalsenull");
     let res = bool_literal(&ctx).unwrap();
-    assert_eq!(res.val(), true);
+    assert!(res.val());
     assert_eq!(res.index(), 4);
     assert_eq!(res.ctx().text_slice(), "falsenull");
 
     let ctx = res.ctx();
-    let res = bool_literal(&ctx).unwrap();
-    assert_eq!(res.val(), false);
+    let res = bool_literal(ctx).unwrap();
+    assert!(!res.val());
     assert_eq!(res.index(), 9);
     assert_eq!(res.ctx().text_slice(), "null");
 
     let ctx = res.ctx();
-    let res = bool_literal(&ctx);
-    assert_eq!(res.is_err(), true);
+    let res = bool_literal(ctx);
+    assert!(res.is_err());
   }
 
   #[test]
@@ -143,8 +143,8 @@ mod test {
     assert_eq!(res.ctx().text_slice(), "");
 
     let ctx = res.ctx();
-    let res = ident(&ctx);
-    assert_eq!(res.is_err(), true);
+    let res = ident(ctx);
+    assert!(res.is_err());
 
     let ctx = Ctx::new("foo(");
     let res = ident(&ctx).unwrap();

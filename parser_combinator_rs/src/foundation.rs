@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ctx {
   text: String,
   index: usize,
@@ -50,13 +50,13 @@ impl Ctx {
     let len = r#match.len();
     let text = self.text_slice();
     if len > text.len() {
-      return Err(self.failure(r#match.clone()));
+      return Err(self.failure(r#match));
     }
 
     if text[0..len] == r#match {
-      return Ok(self.skip(len).success(r#match.to_string()));
+      Ok(self.skip(len).success(r#match))
     } else {
-      return Err(self.failure(r#match));
+      Err(self.failure(r#match))
     }
   }
 
@@ -80,7 +80,7 @@ impl Ctx {
 
 pub type Result<T> = std::result::Result<Success<T>, Failure>;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Success<T> {
   ctx: Ctx,
   val: T,
@@ -105,7 +105,7 @@ impl<T> Success<T> {
   }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Failure {
   ctx: Ctx,
   expected: String,

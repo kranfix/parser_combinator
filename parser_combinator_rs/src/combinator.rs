@@ -8,7 +8,7 @@ pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<T
     let mut err = ctx.failure("any".to_string());
 
     for parser in parsers {
-      let res = parser(&ctx);
+      let res = parser(ctx);
       let failure = match res {
         Ok(success) => return Ok(success),
         Err(failure) => failure,
@@ -66,9 +66,9 @@ pub fn delimited<T: Clone, L, R>(
   move |ctx| {
     let l_res = left(ctx)?;
     let mut next_ctx = l_res.ctx();
-    let res = parser(&next_ctx)?;
+    let res = parser(next_ctx)?;
     next_ctx = res.ctx();
-    let r_res = right(&next_ctx)?;
+    let r_res = right(next_ctx)?;
     next_ctx = r_res.ctx();
     Ok(next_ctx.success(res.val()))
   }
@@ -81,7 +81,7 @@ pub fn delimited_left<T: Clone, L>(
   move |ctx| {
     let l_res = left(ctx)?;
     let next_ctx = l_res.ctx();
-    parser(&next_ctx)
+    parser(next_ctx)
   }
 }
 
