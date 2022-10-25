@@ -1,9 +1,9 @@
 use crate::foundation::{Ctx, Result};
 use std::cell::Cell;
 
-pub type ParserFn<T> = Box<dyn for<'a> Fn(&'a Ctx) -> Result<T>>;
+pub type ParserFn<T> = Box<dyn Fn(&Ctx) -> Result<T>>;
 
-pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<T> {
+pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl Fn(&Ctx) -> Result<T> {
   fn _parser<T>(ctx: &Ctx, parsers: &Vec<ParserFn<T>>) -> Result<T> {
     let mut err = ctx.failure("any".to_string());
 
@@ -23,7 +23,7 @@ pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<T
   move |ctx| _parser(ctx, &parsers)
 }
 
-// pub fn sequence<T: Clone>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
+// pub fn sequence<T: Clone>(parsers: Vec<ParserFn<T>>) -> impl Fn(&Ctx) -> Result<Vec<T>> {
 //   fn _parser<T: Clone>(ctx: &Ctx, parsers: &Vec<ParserFn<T>>) -> Result<Vec<T>> {
 //     let mut values: Vec<T> = vec![];
 //     let mut next_ctx = ctx.to_owned();
@@ -38,9 +38,7 @@ pub fn any<T>(parsers: Vec<ParserFn<T>>) -> impl for<'a> Fn(&'a Ctx) -> Result<T
 //   move |ctx| _parser(ctx, &parsers)
 // }
 
-pub fn many<T: Clone>(
-  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
-) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
+pub fn many<T: Clone>(parser: impl Fn(&Ctx) -> Result<T>) -> impl Fn(&Ctx) -> Result<Vec<T>> {
   move |ctx| {
     let mut values: Vec<T> = vec![];
     let mut next_ctx = ctx.to_owned();
@@ -59,10 +57,10 @@ pub fn many<T: Clone>(
 }
 
 pub fn delimited<T: Clone, L, R>(
-  left: impl for<'a> Fn(&'a Ctx) -> Result<L>,
-  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
-  right: impl for<'a> Fn(&'a Ctx) -> Result<R>,
-) -> impl for<'a> Fn(&'a Ctx) -> Result<T> {
+  left: impl Fn(&Ctx) -> Result<L>,
+  parser: impl Fn(&Ctx) -> Result<T>,
+  right: impl Fn(&Ctx) -> Result<R>,
+) -> impl Fn(&Ctx) -> Result<T> {
   move |ctx| {
     let l_res = left(ctx)?;
     let mut next_ctx = l_res.ctx();
@@ -75,9 +73,9 @@ pub fn delimited<T: Clone, L, R>(
 }
 
 pub fn delimited_left<T: Clone, L>(
-  left: impl for<'a> Fn(&'a Ctx) -> Result<L>,
-  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
-) -> impl for<'a> Fn(&'a Ctx) -> Result<T> {
+  left: impl Fn(&Ctx) -> Result<L>,
+  parser: impl Fn(&Ctx) -> Result<T>,
+) -> impl Fn(&Ctx) -> Result<T> {
   move |ctx| {
     let l_res = left(ctx)?;
     let next_ctx = l_res.ctx();
@@ -86,9 +84,9 @@ pub fn delimited_left<T: Clone, L>(
 }
 
 pub fn separated<T: Clone>(
-  separator: impl for<'a> Fn(&'a Ctx) -> Result<String>,
-  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
-) -> impl for<'a> Fn(&'a Ctx) -> Result<Vec<T>> {
+  separator: impl Fn(&Ctx) -> Result<String>,
+  parser: impl Fn(&Ctx) -> Result<T>,
+) -> impl Fn(&Ctx) -> Result<Vec<T>> {
   let is_firt = Cell::new(true);
   let skip_first = move |ctx: &Ctx| {
     if is_firt.get() {
@@ -103,9 +101,9 @@ pub fn separated<T: Clone>(
 }
 
 //fn map<T: Clone, R>(
-//  parser: impl for<'a> Fn(&'a Ctx) -> Result<T>,
+//  parser: impl Fn(&Ctx) -> Result<T>,
 //  op: impl Fn(T) -> R,
-//) -> impl for<'a> Fn(&'a Ctx) -> Result<R> {
+//) -> impl Fn(&Ctx) -> Result<R> {
 //  move |ctx| {
 //    let result = parser(ctx);
 //    match result {
