@@ -6,7 +6,7 @@ pub enum JValue {
   //Num(Num),
   //Obj(HashMap<String, JValue>),
   //Array(Vec<JValue>),
-  //Bool(bool),
+  Bool(bool),
   Null,
 }
 
