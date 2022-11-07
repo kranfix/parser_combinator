@@ -1,17 +1,13 @@
 //use std::collections::HashMap;
 
+use crate::j_num::Dec;
+
 #[derive(Debug)]
 pub enum JValue {
   //Str(String),
-  //Num(Num),
+  Num(Dec),
   //Obj(HashMap<String, JValue>),
   //Array(Vec<JValue>),
   Bool(bool),
   Null,
 }
-
-// #[derive(Debug)]
-// pub enum Num {
-//   Int(i32),
-//   Float(f32),
-// }
