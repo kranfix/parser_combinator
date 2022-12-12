@@ -1,22 +1,25 @@
 //use std::collections::HashMap;
 
-use crate::{j_bool_null::raw_bool_or_null, j_num::Dec, j_str::raw_str};
-use nom::Parser;
+use crate::{commons::whitespace, j_bool_null::raw_bool_or_null, j_num::Dec, j_str::raw_str};
+use nom::{multi::many0, Parser};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum JValue {
   Str(String),
   Num(Dec),
   //Obj(HashMap<String, JValue>),
-  //Array(Vec<JValue>),
+  Array(Vec<JValue>),
   Bool(bool),
   Null,
 }
 
 impl JValue {
   pub fn parse(input: &str) -> nom::IResult<&str, JValue> {
+    let (input, ()) = whitespace(input)?;
     let mut parser = parse_jvalue_str.or(parse_jvalue_num).or(raw_bool_or_null);
-    parser.parse(input)
+    let (input, parsed) = parser.parse(input)?;
+    let (input, ()) = whitespace(input)?;
+    Ok((input, parsed))
   }
 }
 
