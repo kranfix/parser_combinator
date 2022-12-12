@@ -6,7 +6,7 @@ use nom::{
 
 use crate::{commons::whitespace, j_str::raw_str, j_value::JValue};
 
-pub fn raw_map(input: &str) -> IResult<&str, HashMap<String, JValue>> {
+pub fn raw_obj(input: &str) -> IResult<&str, HashMap<String, JValue>> {
   let mut parse = delimited(char('{'), separated_list0(char(','), parse_kv), char('}'));
 
   let (input, pairs) = parse(input)?;
@@ -26,11 +26,11 @@ fn parse_kv(input: &str) -> IResult<&str, (String, JValue)> {
 mod test {
   use crate::j_value::JValue;
 
-  use super::raw_map;
+  use super::raw_obj;
 
   #[test]
   fn test_obj() {
-    let Ok(("", obj)) = raw_map(r#"{"a": "this123", "b": 123, "c": true, "d": false, "e": null}"#) else {
+    let Ok(("", obj)) = raw_obj(r#"{"a": "this123", "b": 123, "c": true, "d": false, "e": null}"#) else {
       unreachable!()
     };
     assert_eq!(

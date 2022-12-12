@@ -2,7 +2,7 @@ use nom::{character::complete::char, multi::separated_list0, sequence::delimited
 
 use crate::j_value::JValue;
 
-pub fn raw_vec(input: &str) -> IResult<&str, Vec<JValue>> {
+pub fn raw_array(input: &str) -> IResult<&str, Vec<JValue>> {
   let mut parse = delimited(
     char('['),
     separated_list0(char(','), JValue::parse),
@@ -17,11 +17,11 @@ pub fn raw_vec(input: &str) -> IResult<&str, Vec<JValue>> {
 mod test {
   use crate::j_value::JValue;
 
-  use super::raw_vec;
+  use super::raw_array;
 
   #[test]
   fn test_array() {
-    let Ok(("", vec)) = raw_vec(r#"["this123", 123, true, false, null]"#) else {
+    let Ok(("", vec)) = raw_array(r#"["this123", 123, true, false, null]"#) else {
       unreachable!()
     };
     assert_eq!(vec[0], JValue::Str("this123".to_string()));
