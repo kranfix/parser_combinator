@@ -3,13 +3,7 @@ use nom::combinator::opt;
 use nom::sequence::preceded;
 use nom::{error, Parser};
 
-use crate::j_value::JValue;
-
-pub fn raw_num(input: &str) -> nom::IResult<&str, JValue> {
-  let (input, num) = Dec::parse(input)?;
-  Ok((input, JValue::Num(num)))
-}
-
+#[derive(PartialEq, Eq)]
 pub struct Dec {
   negative: bool,
   data: Vec<u8>,
@@ -17,7 +11,7 @@ pub struct Dec {
 }
 
 impl Dec {
-  fn parse(input: &str) -> nom::IResult<&str, Dec, error::Error<&str>> {
+  pub fn parse(input: &str) -> nom::IResult<&str, Dec, error::Error<&str>> {
     let (input, sign) = opt(char('-')).parse(input)?;
     let negative = sign.is_some();
 
