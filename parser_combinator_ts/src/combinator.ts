@@ -69,10 +69,10 @@ export function delimited<T, L, R>(
   };
 }
 
-export function delimitedLeft(
+export function delimitedLeft<T>(
   left: Parser<string>,
-  parser: Parser<any>
-): Parser<any> {
+  parser: Parser<T>
+): Parser<T> {
   return (ctx) => {
     const leftRes = left(ctx);
     if (!leftRes.success) return leftRes as Failure;

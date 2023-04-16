@@ -9,7 +9,7 @@ import {
 import { Context, Failure, Result, formatFailure } from "./foundation";
 
 // Expresion
-type Expr = boolean | number | Call | null;
+export type Expr = boolean | number | Call | null;
 
 interface Call {
   readonly target: string;
@@ -54,8 +54,8 @@ export function identifier(ctx: Context): Result<string> {
   return ctx.parse_regex(/[a-zA-Z][a-zA-Z0-9]*/g, "identifier");
 }
 
-const lPara = (ctx: Context): Result<string> => ctx.parse_str("(");
-const rPara = (ctx: Context): Result<string> => ctx.parse_str(")");
+export const lPara = (ctx: Context): Result<string> => ctx.parse_str("(");
+export const rPara = (ctx: Context): Result<string> => ctx.parse_str(")");
 const call = map(
   sequence<any>([identifier, delimited(lPara, args, rPara)]),
   ([target, args]: [string, Expr[]]): Call => ({ target, args })
@@ -63,9 +63,10 @@ const call = map(
 
 export function args(ctx: Context): Result<Expr[]> {
   let isFirst = true;
-  const skipFirstComma = (ctx) => {
+  const skipFirstComma = (ctx: Context): Result<"" | ","> => {
+    const res = ctx.parse_str(isFirst ? "" : ",");
     if (isFirst) isFirst = false;
-    return ctx.parse_str(isFirst ? "" : ",");
+    return res;
   };
   const trailingArg = delimitedLeft(skipFirstComma, expr);
   return many(trailingArg)(ctx);
