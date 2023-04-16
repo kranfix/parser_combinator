@@ -4,9 +4,9 @@ export class Context {
   text: string;
   index: number;
 
-  constructor(text: string, index?: number) {
+  constructor(text: string, index: number = 0) {
     this.text = text;
-    this.index = index ?? 0;
+    this.index = index;
   }
 
   skip(n: number): Context {
@@ -23,7 +23,7 @@ export class Context {
     return { success: false, expected, ctx: this };
   }
 
-  parse_str(match: string): Result<string> {
+  parse_str<T extends string>(match: T): Result<T> {
     const endIdx = this.index + match.length;
 
     if (endIdx > this.text.length) {
