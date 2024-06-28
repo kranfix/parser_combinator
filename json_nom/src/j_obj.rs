@@ -30,7 +30,8 @@ mod test {
 
   #[test]
   fn test_obj() {
-    let Ok(("", obj)) = raw_obj(r#"{"a": "this123", "b": 123, "c": true, "d": false, "e": null}"#) else {
+    let Ok(("", obj)) = raw_obj(r#"{"a": "this123", "b": 123, "c": true, "d": false, "e": null}"#)
+    else {
       unreachable!()
     };
     assert_eq!(
