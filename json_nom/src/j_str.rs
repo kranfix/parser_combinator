@@ -2,28 +2,28 @@ use nom::character::complete::char;
 use nom::error::{Error, ErrorKind, ParseError};
 use nom::{AsChar, IResult, Needed, Parser, Slice};
 
-
 pub fn raw_str<'a>(raw_input: &'a str) -> IResult<&'a str, String, nom::error::Error<&'a str>> {
   let (mut input, _) = char('"')(raw_input)?;
 
   let mut text = String::new();
 
   //let mut subtext = alphanumeric1.or(space).or(scape_char);
-  let mut subtext = scape_char.map(|c| (c, true))
-  .or(readbable_ascii_char.map(|c| (c, false)));
+  let mut subtext = scape_char
+    .map(|c| (c, true))
+    .or(readbable_ascii_char.map(|c| (c, false)));
 
   loop {
     match subtext.parse(input) {
-        Ok((rest, (val, is_scaped))) => {
-            if val == '"' && !is_scaped {
-              return Ok((rest, text))
-            } else {
-              input = rest;
-              text.push(val);
-            }
-        },
-        Err(nom::Err::Error(e)) => return Err(nom::Err::Failure(e)),
-        Err(other_err) => return Err(other_err),
+      Ok((rest, (val, is_scaped))) => {
+        if val == '"' && !is_scaped {
+          return Ok((rest, text));
+        } else {
+          input = rest;
+          text.push(val);
+        }
+      }
+      Err(nom::Err::Error(e)) => return Err(nom::Err::Failure(e)),
+      Err(other_err) => return Err(other_err),
     }
   }
 }
@@ -34,10 +34,13 @@ fn readbable_ascii_char(input: &str) -> IResult<&str, char> {
       if is_readbable_ascii_char(c) {
         Ok((input.slice(c.len()..), c))
       } else {
-        Err(nom::Err::Failure(Error::from_error_kind(input, ErrorKind::IsA)))
+        Err(nom::Err::Failure(Error::from_error_kind(
+          input,
+          ErrorKind::IsA,
+        )))
       }
-    },
-    None => Err(nom::Err::Incomplete(Needed::new(1)))
+    }
+    None => Err(nom::Err::Incomplete(Needed::new(1))),
   }
 }
 
@@ -50,37 +53,39 @@ fn scape_char<'a, E: ParseError<&'a str>>(raw_input: &'a str) -> IResult<&str, c
   let (input, _) = char::<_, E>('\\')(raw_input)?;
 
   if input.is_empty() {
-    return Err(nom::Err::Incomplete(nom::Needed::new(1)))
+    return Err(nom::Err::Incomplete(nom::Needed::new(1)));
   }
 
   match char::<_, E>('n')(input) {
     Ok((input, _)) => return Ok((input, '\n')),
-    Err(_) => {},
+    Err(_) => {}
   }
 
   match char::<_, E>('r')(input) {
     Ok((input, _)) => return Ok((input, '\r')),
-    Err(_) => {},
+    Err(_) => {}
   }
 
   match char::<_, E>('t')(input) {
     Ok((input, _)) => return Ok((input, '\t')),
-    Err(_) => {},
+    Err(_) => {}
   }
 
   match char::<_, E>('\\')(input) {
     Ok((input, _)) => return Ok((input, '\\')),
-    Err(_) => {},
+    Err(_) => {}
   }
 
   match char::<_, E>('"')(input) {
     Ok((input, _)) => return Ok((input, '\"')),
-    Err(_) => {},
+    Err(_) => {}
   }
 
-  Err(nom::Err::Failure(E::from_error_kind(raw_input, ErrorKind::Escaped)))
+  Err(nom::Err::Failure(E::from_error_kind(
+    raw_input,
+    ErrorKind::Escaped,
+  )))
 }
-
 
 #[cfg(test)]
 mod test {
@@ -96,7 +101,8 @@ mod test {
     assert_eq!(rest, "");
     assert_eq!(result, "  ");
 
-    let (rest, result) = raw_str(r#""this 1234""#).expect("string with alphanumerics and a whitespace");
+    let (rest, result) =
+      raw_str(r#""this 1234""#).expect("string with alphanumerics and a whitespace");
     assert_eq!(rest, "");
     assert_eq!(result, "this 1234");
 

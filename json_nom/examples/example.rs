@@ -5,7 +5,7 @@ fn main() {
       {
         "a": [
           1,
-          "hola",
+          "hola@hello.rs is an email!",
           {
             "x": true
           }

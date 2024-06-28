@@ -125,7 +125,7 @@ mod test {
       let JValue::Obj(obj1) = &array[2] else {
         unreachable!()
       };
-      let Some(JValue::Bool(true)) = obj1.get(&"x".to_string()) else  {
+      let Some(JValue::Bool(true)) = obj1.get(&"x".to_string()) else {
         unreachable!()
       };
     }
