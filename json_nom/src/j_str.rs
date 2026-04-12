@@ -49,7 +49,7 @@ fn is_readbable_ascii_char(c: char) -> bool {
   a >= 0x20 && a <= 0x7E
 }
 
-fn scape_char<'a, E: ParseError<&'a str>>(raw_input: &'a str) -> IResult<&str, char, E> {
+fn scape_char<'a, E: ParseError<&'a str>>(raw_input: &'a str) -> IResult<&'a str, char, E> {
   let (input, _) = char::<_, E>('\\')(raw_input)?;
 
   if input.is_empty() {

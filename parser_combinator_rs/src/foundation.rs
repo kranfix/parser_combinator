@@ -61,7 +61,7 @@ impl Ctx {
   }
 
   pub fn parse_regex(&self, re: regex::Regex, expected: String) -> Result<String> {
-    fn get_firts_match(text: &str, re: regex::Regex) -> Option<regex::Match> {
+    fn get_firts_match(text: &'_ str, re: regex::Regex) -> Option<regex::Match<'_>> {
       let captures = re.captures(text)?;
       let first = captures.get(0)?;
       if first.start() != 0 {
